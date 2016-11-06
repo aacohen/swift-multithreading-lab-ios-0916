@@ -22,8 +22,8 @@ class ImageViewController : UIViewController {
     let filtersToApply = ["CIBloom",
                           "CIPhotoEffectProcess",
                           "CIExposureAdjust"]
+    var flatigram = Flatigram()
     
-//    var flatigram = Flatigram()
     
     @IBOutlet weak var filterButton: UIBarButtonItem!
     @IBOutlet weak var chooseImageButton: UIBarButtonItem!
@@ -39,7 +39,49 @@ class ImageViewController : UIViewController {
     }
     
     @IBAction func filterButtonTapped(_ sender: AnyObject) {
+       self.filterImage { (success) in
         
+        }
     }
     
 }
+
+extension ImageViewController {
+    func filterImage(with completion: @escaping (Bool)->() ) {
+        var queue = OperationQueue()
+        queue.name = "Image Filtration Queue"
+        queue.qualityOfService = .userInitiated
+        queue.maxConcurrentOperationCount = 1
+        
+        for filter in filtersToApply {
+            
+            let filterer = FilterOperation(flatigram: flatigram, filter: filter)
+            
+            filterer.completionBlock = {
+                
+                if queue.operationCount == 0 {
+                    DispatchQueue.main.async(execute: {
+                        self.flatigram.state = .filtered
+                        completion(true)
+                    })
+                    
+                }
+                
+                if filterer.isCancelled {
+                    completion(false)
+                    return
+                }
+            }
+            queue.addOperation(filterer)
+            print("Added FilterOperation with \(filter) to \(queue.name!)")
+        }
+        
+    }
+}
+
+
+
+
+
+
+
