@@ -39,10 +39,12 @@ class ImageViewController : UIViewController {
     }
     
     @IBAction func filterButtonTapped(_ sender: AnyObject) {
-       self.filterImage { (success) in
-        
+        if flatigram.state == .unfiltered {
+            startProcess()
+        } else {
+            presentFilteredAlert()
         }
-    }
+           }
     
 }
 
@@ -76,6 +78,25 @@ extension ImageViewController {
             print("Added FilterOperation with \(filter) to \(queue.name!)")
         }
         
+    }
+    
+    func startProcess() {
+        filterButton.isEnabled = false
+        chooseImageButton.isEnabled = false
+        self.activityIndicator.startAnimating()
+        
+        self.filterImage { (result) in
+            
+            OperationQueue.main.addOperation({
+                result ? print("Image successfully filtered") : print("Image filtering did not complete")
+                self.filterButton.isEnabled = true
+                self.chooseImageButton.isEnabled = true
+                self.imageView.image = self.flatigram.image
+                self.activityIndicator.stopAnimating()
+            })
+            
+        }
+
     }
 }
 
